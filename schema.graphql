@@ -1,0 +1,14 @@
+type PricePoint @entity {
+  id: ID!
+  timestamp: BigInt!
+
+  priceDeusFtm: BigInt!
+  priceFtmUsdc: BigInt!
+
+  price: BigInt! # deus/usdc price
+}
+
+type MetaData @entity {
+  id: ID!
+  nextPricePointId: BigInt!
+}
