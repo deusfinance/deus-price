@@ -19,6 +19,7 @@ function getMetaData(): MetaData {
   if (metaData == null) {
     metaData = new MetaData("metadata");
     metaData.nextPricePointId = BigInt.fromI32(1000);
+    metaData.count = BigInt.fromI32(0);
     metaData.save();
   }
   return metaData;
