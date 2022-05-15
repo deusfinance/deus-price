@@ -6,7 +6,7 @@ import {
   Swap,
   Sync,
   Transfer,
-} from "../generated/UniswapV2Pair/UniswapV2Pair";
+} from "../generated/DeusFtm/UniswapV2Pair";
 import { Vault } from "../generated/DeusDei/Vault";
 import {
   PricePoint,
