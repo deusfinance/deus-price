@@ -1,10 +1,4 @@
-import {
-  Address,
-  BigInt,
-  Bytes,
-  ethereum,
-  Value,
-} from "@graphprotocol/graph-ts";
+import { Address, BigInt, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import {
   UniswapV2Pair,
   Burn,
@@ -14,15 +8,53 @@ import {
   Transfer,
 } from "../generated/UniswapV2Pair/UniswapV2Pair";
 import { Vault } from "../generated/DeusDei/Vault";
-import { PricePoint, MetaData } from "../generated/schema";
+import {
+  PricePoint,
+  MetaData,
+  CumulativeTransactionCount,
+} from "../generated/schema";
 
-function getNextId(): BigInt {
+function getMetaData(): MetaData {
   let metaData = MetaData.load("metadata");
   if (metaData == null) {
     metaData = new MetaData("metadata");
     metaData.nextPricePointId = BigInt.fromI32(1000);
     metaData.save();
   }
+  return metaData;
+}
+
+function getCumulativeTransactionCountRecord(
+  timestamp: BigInt
+): CumulativeTransactionCount {
+  let record = CumulativeTransactionCount.load(timestamp.toHexString());
+  if (record == null) {
+    record = new CumulativeTransactionCount(timestamp.toHexString());
+  }
+  return record;
+}
+
+function incrementMetaDataGlobalTransactionCount(): BigInt {
+  let metadata = getMetaData();
+  metadata.count = metadata.count.plus(BigInt.fromI32(1));
+  metadata.save();
+  return metadata.count;
+}
+
+function updateCumulativeTransactionCountRecord(
+  timestamp: BigInt,
+  globalCumulativeCount: BigInt
+): void {
+  let cumulativeTransactionCountRecord = getCumulativeTransactionCountRecord(
+    timestamp
+  );
+  cumulativeTransactionCountRecord.timestamp = timestamp;
+  cumulativeTransactionCountRecord.count = globalCumulativeCount;
+  cumulativeTransactionCountRecord.save();
+}
+
+function getNextId(): BigInt {
+  let metaData = getMetaData();
   return metaData.nextPricePointId;
 }
 
@@ -45,6 +77,7 @@ function snapshotPrice(event: ethereum.Event): void {
   let deusDei = Vault.bind(
     Address.fromString("0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce")
   );
+
   let priceDeusFtm = deusFtm
     .getReserves()
     .value0.times(BigInt.fromString("1000000000000000000"))
@@ -69,9 +102,11 @@ function snapshotPrice(event: ethereum.Event): void {
     .times(priceFtmUsdc)
     .div(BigInt.fromString("1000000000000000000"));
 
+  let globalCount = incrementMetaDataGlobalTransactionCount();
+  updateCumulativeTransactionCountRecord(event.block.timestamp, globalCount);
+
   let pricePoint = new PricePoint(newId.toString());
   pricePoint.timestamp = event.block.timestamp;
-
   pricePoint.priceDeusFtm = priceDeusFtm;
   pricePoint.priceFtmUsdc = priceFtmUsdc;
   pricePoint.priceDeusDei = priceDeusDei;

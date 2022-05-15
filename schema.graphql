@@ -12,4 +12,11 @@ type PricePoint @entity {
 type MetaData @entity {
   id: ID!
   nextPricePointId: BigInt!
+  count: BigInt!
+}
+
+type CumulativeTransactionCount @entity {
+  id: ID!
+  timestamp: BigInt!
+  count: BigInt!
 }

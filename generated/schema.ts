@@ -127,4 +127,68 @@ export class MetaData extends Entity {
   set nextPricePointId(value: BigInt) {
     this.set("nextPricePointId", Value.fromBigInt(value));
   }
+
+  get count(): BigInt {
+    let value = this.get("count");
+    return value!.toBigInt();
+  }
+
+  set count(value: BigInt) {
+    this.set("count", Value.fromBigInt(value));
+  }
+}
+
+export class CumulativeTransactionCount extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(
+      id != null,
+      "Cannot save CumulativeTransactionCount entity without an ID"
+    );
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type CumulativeTransactionCount must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("CumulativeTransactionCount", id.toString(), this);
+    }
+  }
+
+  static load(id: string): CumulativeTransactionCount | null {
+    return changetype<CumulativeTransactionCount | null>(
+      store.get("CumulativeTransactionCount", id)
+    );
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    return value!.toBigInt();
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
+  }
+
+  get count(): BigInt {
+    let value = this.get("count");
+    return value!.toBigInt();
+  }
+
+  set count(value: BigInt) {
+    this.set("count", Value.fromBigInt(value));
+  }
 }
