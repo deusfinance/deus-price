@@ -15,11 +15,6 @@ export class PricePoint extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
-
-    this.set("timestamp", Value.fromBigInt(BigInt.zero()));
-    this.set("priceDeusFtm", Value.fromBigInt(BigInt.zero()));
-    this.set("priceFtmUsdc", Value.fromBigInt(BigInt.zero()));
-    this.set("price", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
@@ -65,6 +60,15 @@ export class PricePoint extends Entity {
     this.set("priceDeusFtm", Value.fromBigInt(value));
   }
 
+  get priceDeusDei(): BigInt {
+    let value = this.get("priceDeusDei");
+    return value!.toBigInt();
+  }
+
+  set priceDeusDei(value: BigInt) {
+    this.set("priceDeusDei", Value.fromBigInt(value));
+  }
+
   get priceFtmUsdc(): BigInt {
     let value = this.get("priceFtmUsdc");
     return value!.toBigInt();
@@ -88,8 +92,6 @@ export class MetaData extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
-
-    this.set("nextPricePointId", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {

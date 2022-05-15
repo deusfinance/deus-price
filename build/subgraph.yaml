@@ -21,7 +21,7 @@ dataSources:
         - Transfer
       abis:
         - name: UniswapV2Pair
-          file: DeusFtm/abis/UniswapV2Pair.json
+          file: DeusFtm\abis\UniswapV2Pair.json
       eventHandlers:
         - event: Burn(indexed address,uint256,uint256,indexed address)
           handler: handleBurn
@@ -33,36 +33,24 @@ dataSources:
           handler: handleSync
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: DeusFtm/DeusFtm.wasm
+      file: DeusFtm\DeusFtm.wasm
   - kind: ethereum
-    name: FtmUsdc
+    name: DeusDei
     network: fantom
     source:
-      address: "0x2b4C76d0dc16BE1C31D4C1DC53bF9B45987Fc75c"
-      abi: UniswapV2Pair
+      address: "0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce"
+      abi: Vault
       startBlock: 37390849
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
       language: wasm/assemblyscript
       entities:
-        - Burn
-        - Mint
         - Swap
-        - Sync
-        - Transfer
       abis:
-        - name: UniswapV2Pair
-          file: FtmUsdc/abis/UniswapV2Pair.json
+        - name: Vault
+          file: DeusDei\abis\Vault.json
       eventHandlers:
-        - event: Burn(indexed address,uint256,uint256,indexed address)
-          handler: handleBurn
-        - event: Mint(indexed address,uint256,uint256)
-          handler: handleMint
-        - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
-          handler: handleSwap
-        - event: Sync(uint112,uint112)
-          handler: handleSync
-        - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
-      file: DeusFtm/DeusFtm.wasm
+        - event: Swap(indexed bytes32,indexed address,indexed address,uint256,uint256)
+          handler: handleBeetsSwap
+      file: DeusFtm\DeusFtm.wasm

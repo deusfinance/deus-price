@@ -3,6 +3,7 @@ type PricePoint @entity {
   timestamp: BigInt!
 
   priceDeusFtm: BigInt!
+  priceDeusDei: BigInt!
   priceFtmUsdc: BigInt!
 
   price: BigInt! # deus/usdc price
