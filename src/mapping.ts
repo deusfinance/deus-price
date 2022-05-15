@@ -97,7 +97,10 @@ function snapshotPrice(event: ethereum.Event): void {
   let reserveDei = deusDeiInfo.value1[0];
   let reserveDeus = deusDeiInfo.value1[1];
 
-  let priceDeusDei = reserveDeus.div(reserveDei.times(BigInt.fromI32(4)));
+  let priceDeusDei = reserveDei
+    .times(BigInt.fromString("1000000000000000000"))
+    .times(BigInt.fromI32(4))
+    .div(reserveDeus);
 
   let priceDeusUsdc = priceDeusFtm
     .times(priceFtmUsdc)
