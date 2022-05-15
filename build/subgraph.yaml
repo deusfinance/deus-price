@@ -22,6 +22,8 @@ dataSources:
       abis:
         - name: UniswapV2Pair
           file: DeusFtm\abis\UniswapV2Pair.json
+        - name: Vault
+          file: DeusFtm\abis\Vault.json
       eventHandlers:
         - event: Burn(indexed address,uint256,uint256,indexed address)
           handler: handleBurn
@@ -50,6 +52,8 @@ dataSources:
       abis:
         - name: Vault
           file: DeusDei\abis\Vault.json
+        - name: UniswapV2Pair
+          file: DeusDei\abis\UniswapV2Pair.json
       eventHandlers:
         - event: Swap(indexed bytes32,indexed address,indexed address,uint256,uint256)
           handler: handleBeetsSwap

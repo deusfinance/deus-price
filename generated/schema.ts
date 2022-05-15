@@ -15,12 +15,6 @@ export class PricePoint extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
-
-    this.set("timestamp", Value.fromBigInt(BigInt.zero()));
-    this.set("priceDeusFtm", Value.fromBigInt(BigInt.zero()));
-    this.set("priceDeusDei", Value.fromBigInt(BigInt.zero()));
-    this.set("priceFtmUsdc", Value.fromBigInt(BigInt.zero()));
-    this.set("price", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
@@ -98,9 +92,6 @@ export class MetaData extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
-
-    this.set("nextPricePointId", Value.fromBigInt(BigInt.zero()));
-    this.set("count", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
@@ -151,9 +142,6 @@ export class CumulativeTransactionCount extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
-
-    this.set("timestamp", Value.fromBigInt(BigInt.zero()));
-    this.set("count", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
