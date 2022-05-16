@@ -17,13 +17,10 @@ dataSources:
         - Burn
         - Mint
         - Swap
-        - Sync
         - Transfer
       abis:
         - name: UniswapV2Pair
           file: DeusFtm\abis\UniswapV2Pair.json
-        - name: Vault
-          file: DeusFtm\abis\Vault.json
         - name: EACAggregatorProxy
           file: DeusFtm\abis\ChainLink.json
       eventHandlers:
@@ -33,8 +30,6 @@ dataSources:
           handler: handleMint
         - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
           handler: handleSwap
-        - event: Sync(uint112,uint112)
-          handler: handleSync
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
       file: DeusFtm\DeusFtm.wasm

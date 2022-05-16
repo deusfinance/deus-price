@@ -6,9 +6,6 @@
     "FtmUsdc": {
       "address": "0x2b4C76d0dc16BE1C31D4C1DC53bF9B45987Fc75c"
     },
-    "DeusDei": {
-      "address": "0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce"
-    },
     "ChainLink": {
       "address": "0xf4766552D15AE4d256Ad41B6cf2933482B0680dc"
     }
