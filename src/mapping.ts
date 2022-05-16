@@ -7,11 +7,13 @@ import {
   Sync,
   Transfer,
 } from "../generated/DeusFtm/UniswapV2Pair";
-import { Vault } from "../generated/DeusDei/Vault";
+import { EACAggregatorProxy } from "../generated/DeusFtm/EACAggregatorProxy";
 import {
   PricePoint,
   MetaData,
   CumulativeTransactionCount,
+  TawapLastPoint,
+  TwapPoint,
 } from "../generated/schema";
 
 function getMetaData(): MetaData {
@@ -28,9 +30,9 @@ function getMetaData(): MetaData {
 function getCumulativeTransactionCountRecord(
   timestamp: BigInt
 ): CumulativeTransactionCount {
-  let record = CumulativeTransactionCount.load(timestamp.toHexString());
+  let record = CumulativeTransactionCount.load(timestamp.toString());
   if (record == null) {
-    record = new CumulativeTransactionCount(timestamp.toHexString());
+    record = new CumulativeTransactionCount(timestamp.toString());
   }
   return record;
 }
@@ -68,39 +70,20 @@ function incrementNextId(): void {
 function snapshotPrice(event: ethereum.Event): void {
   let newId = getNextId();
 
-  let deusFtm = UniswapV2Pair.bind(
-    Address.fromString("0xaF918eF5b9f33231764A5557881E6D3e5277d456")
-  );
-  let ftmUsdc = UniswapV2Pair.bind(
-    Address.fromString("0x2b4C76d0dc16BE1C31D4C1DC53bF9B45987Fc75c")
-  );
+  let deusFtm = UniswapV2Pair.bind(Address.fromBytes(event.address));
 
-  let deusDei = Vault.bind(
-    Address.fromString("0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce")
+  let chainLinkFTMPrice = EACAggregatorProxy.bind(
+    Address.fromString("0xf4766552D15AE4d256Ad41B6cf2933482B0680dc")
   );
 
   let priceDeusFtm = deusFtm
     .getReserves()
     .value0.times(BigInt.fromString("1000000000000000000"))
     .div(deusFtm.getReserves().value1);
-  let priceFtmUsdc = ftmUsdc
-    .getReserves()
-    .value0.times(BigInt.fromI64(1000000000000))
-    .times(BigInt.fromString("1000000000000000000"))
-    .div(ftmUsdc.getReserves().value1);
 
-  let deusDeiInfo = deusDei.getPoolTokens(
-    Bytes.fromHexString(
-      "0x0e8e7307e43301cf28c5d21d5fd3ef0876217d410002000000000000000003f1"
-    )
-  );
-  let reserveDei = deusDeiInfo.value1[0];
-  let reserveDeus = deusDeiInfo.value1[1];
-
-  let priceDeusDei = reserveDei
-    .times(BigInt.fromString("1000000000000000000"))
-    .times(BigInt.fromI32(4))
-    .div(reserveDeus);
+  let priceFtmUsdc = chainLinkFTMPrice
+    .latestAnswer()
+    .times(BigInt.fromString("10000000000"));
 
   let priceDeusUsdc = priceDeusFtm
     .times(priceFtmUsdc)
@@ -113,9 +96,41 @@ function snapshotPrice(event: ethereum.Event): void {
   pricePoint.timestamp = event.block.timestamp;
   pricePoint.priceDeusFtm = priceDeusFtm;
   pricePoint.priceFtmUsdc = priceFtmUsdc;
-  pricePoint.priceDeusDei = priceDeusDei;
-  pricePoint.price = priceDeusUsdc;
+  pricePoint.priceDeusUsdc = priceDeusUsdc;
+  pricePoint.source = event.address;
   pricePoint.save();
+
+  let lastPointMetadata = TawapLastPoint.load("twapData");
+  if (!lastPointMetadata) {
+    lastPointMetadata = new TawapLastPoint("twapData");
+    lastPointMetadata.lastId = pricePoint.id;
+
+    let twapPoint = new TwapPoint(newId.toString());
+
+    twapPoint.numerator = BigInt.fromI32(0);
+    twapPoint.denominator = BigInt.fromI32(0);
+    twapPoint.timestamp = pricePoint.timestamp;
+    twapPoint.save();
+
+    lastPointMetadata.lastTwapId = twapPoint.id;
+    lastPointMetadata.save();
+  } else {
+    let lastPoint = PricePoint.load(lastPointMetadata.lastId);
+    let lastTwap = TwapPoint.load(lastPointMetadata.lastTwapId) as TwapPoint;
+
+    let deltaX = pricePoint.timestamp
+      .minus(lastPoint!.timestamp)
+      .times(BigInt.fromString(pricePoint.id));
+
+    let numerator = pricePoint.priceDeusUsdc.times(deltaX);
+    let denominator = deltaX;
+    let newTwap = new TwapPoint(newId.toString());
+    newTwap.numerator = lastTwap.numerator.plus(numerator);
+    newTwap.denominator = lastTwap.denominator.plus(denominator);
+    newTwap.timestamp = pricePoint.timestamp;
+    newTwap.source = event.address;
+    newTwap.save();
+  }
   incrementNextId();
 }
 

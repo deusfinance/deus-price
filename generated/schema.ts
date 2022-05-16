@@ -15,6 +15,11 @@ export class PricePoint extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
+
+    this.set("timestamp", Value.fromBigInt(BigInt.zero()));
+    this.set("priceDeusFtm", Value.fromBigInt(BigInt.zero()));
+    this.set("priceFtmUsdc", Value.fromBigInt(BigInt.zero()));
+    this.set("priceDeusUsdc", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
@@ -60,15 +65,6 @@ export class PricePoint extends Entity {
     this.set("priceDeusFtm", Value.fromBigInt(value));
   }
 
-  get priceDeusDei(): BigInt {
-    let value = this.get("priceDeusDei");
-    return value!.toBigInt();
-  }
-
-  set priceDeusDei(value: BigInt) {
-    this.set("priceDeusDei", Value.fromBigInt(value));
-  }
-
   get priceFtmUsdc(): BigInt {
     let value = this.get("priceFtmUsdc");
     return value!.toBigInt();
@@ -78,13 +74,30 @@ export class PricePoint extends Entity {
     this.set("priceFtmUsdc", Value.fromBigInt(value));
   }
 
-  get price(): BigInt {
-    let value = this.get("price");
+  get priceDeusUsdc(): BigInt {
+    let value = this.get("priceDeusUsdc");
     return value!.toBigInt();
   }
 
-  set price(value: BigInt) {
-    this.set("price", Value.fromBigInt(value));
+  set priceDeusUsdc(value: BigInt) {
+    this.set("priceDeusUsdc", Value.fromBigInt(value));
+  }
+
+  get source(): Bytes | null {
+    let value = this.get("source");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set source(value: Bytes | null) {
+    if (!value) {
+      this.unset("source");
+    } else {
+      this.set("source", Value.fromBytes(<Bytes>value));
+    }
   }
 }
 
@@ -92,6 +105,9 @@ export class MetaData extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
+
+    this.set("nextPricePointId", Value.fromBigInt(BigInt.zero()));
+    this.set("count", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
@@ -142,6 +158,9 @@ export class CumulativeTransactionCount extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
+
+    this.set("timestamp", Value.fromBigInt(BigInt.zero()));
+    this.set("count", Value.fromBigInt(BigInt.zero()));
   }
 
   save(): void {
@@ -190,5 +209,138 @@ export class CumulativeTransactionCount extends Entity {
 
   set count(value: BigInt) {
     this.set("count", Value.fromBigInt(value));
+  }
+}
+
+export class TawapLastPoint extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+
+    this.set("lastId", Value.fromString(""));
+    this.set("lastTwapId", Value.fromString(""));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save TawapLastPoint entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type TawapLastPoint must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("TawapLastPoint", id.toString(), this);
+    }
+  }
+
+  static load(id: string): TawapLastPoint | null {
+    return changetype<TawapLastPoint | null>(store.get("TawapLastPoint", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get lastId(): string {
+    let value = this.get("lastId");
+    return value!.toString();
+  }
+
+  set lastId(value: string) {
+    this.set("lastId", Value.fromString(value));
+  }
+
+  get lastTwapId(): string {
+    let value = this.get("lastTwapId");
+    return value!.toString();
+  }
+
+  set lastTwapId(value: string) {
+    this.set("lastTwapId", Value.fromString(value));
+  }
+}
+
+export class TwapPoint extends Entity {
+  constructor(id: string) {
+    super();
+    this.set("id", Value.fromString(id));
+
+    this.set("numerator", Value.fromBigInt(BigInt.zero()));
+    this.set("denominator", Value.fromBigInt(BigInt.zero()));
+    this.set("timestamp", Value.fromBigInt(BigInt.zero()));
+  }
+
+  save(): void {
+    let id = this.get("id");
+    assert(id != null, "Cannot save TwapPoint entity without an ID");
+    if (id) {
+      assert(
+        id.kind == ValueKind.STRING,
+        `Entities of type TwapPoint must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+      );
+      store.set("TwapPoint", id.toString(), this);
+    }
+  }
+
+  static load(id: string): TwapPoint | null {
+    return changetype<TwapPoint | null>(store.get("TwapPoint", id));
+  }
+
+  get id(): string {
+    let value = this.get("id");
+    return value!.toString();
+  }
+
+  set id(value: string) {
+    this.set("id", Value.fromString(value));
+  }
+
+  get numerator(): BigInt {
+    let value = this.get("numerator");
+    return value!.toBigInt();
+  }
+
+  set numerator(value: BigInt) {
+    this.set("numerator", Value.fromBigInt(value));
+  }
+
+  get denominator(): BigInt {
+    let value = this.get("denominator");
+    return value!.toBigInt();
+  }
+
+  set denominator(value: BigInt) {
+    this.set("denominator", Value.fromBigInt(value));
+  }
+
+  get timestamp(): BigInt {
+    let value = this.get("timestamp");
+    return value!.toBigInt();
+  }
+
+  set timestamp(value: BigInt) {
+    this.set("timestamp", Value.fromBigInt(value));
+  }
+
+  get source(): Bytes | null {
+    let value = this.get("source");
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toBytes();
+    }
+  }
+
+  set source(value: Bytes | null) {
+    if (!value) {
+      this.unset("source");
+    } else {
+      this.set("source", Value.fromBytes(<Bytes>value));
+    }
   }
 }

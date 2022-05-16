@@ -24,6 +24,8 @@ dataSources:
           file: DeusFtm\abis\UniswapV2Pair.json
         - name: Vault
           file: DeusFtm\abis\Vault.json
+        - name: EACAggregatorProxy
+          file: DeusFtm\abis\ChainLink.json
       eventHandlers:
         - event: Burn(indexed address,uint256,uint256,indexed address)
           handler: handleBurn
@@ -35,26 +37,4 @@ dataSources:
           handler: handleSync
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
-      file: DeusFtm\DeusFtm.wasm
-  - kind: ethereum
-    name: DeusDei
-    network: fantom
-    source:
-      address: "0x20dd72Ed959b6147912C2e529F0a0C651c33c9ce"
-      abi: Vault
-      startBlock: 37390849
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.5
-      language: wasm/assemblyscript
-      entities:
-        - Swap
-      abis:
-        - name: Vault
-          file: DeusDei\abis\Vault.json
-        - name: UniswapV2Pair
-          file: DeusDei\abis\UniswapV2Pair.json
-      eventHandlers:
-        - event: Swap(indexed bytes32,indexed address,indexed address,uint256,uint256)
-          handler: handleBeetsSwap
       file: DeusFtm\DeusFtm.wasm
