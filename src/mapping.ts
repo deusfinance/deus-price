@@ -127,7 +127,7 @@ function snapshotPrice(event: ethereum.Event): void {
     let newTwap = new TwapPoint(newId.toString());
     newTwap.numerator = lastTwap.numerator.plus(numerator);
     newTwap.denominator = lastTwap.denominator.plus(denominator);
-    newTwap.timestamp = lastPoint!.timestamp;
+    newTwap.timestamp = pricePoint.timestamp;
     newTwap.source = event.address;
     newTwap.save();
   }
