@@ -70,7 +70,9 @@ function incrementNextId(): void {
 function snapshotPrice(event: ethereum.Event): void {
   let newId = getNextId();
 
-  let deusFtm = UniswapV2Pair.bind(Address.fromBytes(event.address));
+  let deusFtm = UniswapV2Pair.bind(
+    Address.fromString("0xaf918ef5b9f33231764a5557881e6d3e5277d456")
+  );
 
   let chainLinkFTMPrice = EACAggregatorProxy.bind(
     Address.fromString("0xf4766552D15AE4d256Ad41B6cf2933482B0680dc")
