@@ -130,6 +130,9 @@ function snapshotPrice(event: ethereum.Event): void {
     newTwap.timestamp = pricePoint.timestamp;
     newTwap.source = event.address;
     newTwap.save();
+    lastPointMetadata.lastId = pricePoint.id;
+    lastPointMetadata.lastTwapId = newTwap.id;
+    lastPointMetadata.save();
   }
   incrementNextId();
 }
