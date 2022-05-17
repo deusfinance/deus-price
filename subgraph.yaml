@@ -17,7 +17,6 @@ dataSources:
         - Burn
         - Mint
         - Swap
-        - Transfer
       abis:
         - name: UniswapV2Pair
           file: ./abis/UniswapV2Pair.json
@@ -30,6 +29,4 @@ dataSources:
           handler: handleMint
         - event: Swap(indexed address,uint256,uint256,uint256,uint256,indexed address)
           handler: handleSwap
-        - event: Transfer(indexed address,indexed address,uint256)
-          handler: handleTransfer
       file: ./src/mapping.ts
