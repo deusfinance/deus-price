@@ -78,9 +78,7 @@ function updateTwap(
     let lastPoint = PricePoint.load(lastPointMetadata.lastId);
     let lastTwap = TwapPoint.load(lastPointMetadata.lastTwapId) as TwapPoint;
 
-    let factor = pricePoint.timestamp
-      .minus(lastPoint!.timestamp)
-      .times(BigInt.fromString(pricePoint.id));
+    let factor = pricePoint.timestamp.minus(lastPoint!.timestamp);
 
     let numerator = lastPoint!.priceDeusUsdc.times(factor);
     let denominator = factor;
