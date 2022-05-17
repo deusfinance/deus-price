@@ -71,13 +71,13 @@ function incrementNextId(): void {
 export function snapshotPrice(event: ethereum.Event): void {
   let newPricePointId = getNextPricePointId();
 
-  let deusFtm = UniswapV2Pair.bind(Address.fromBytes(event.address));
+  let deusFtmPair = UniswapV2Pair.bind(Address.fromBytes(event.address));
   let chainLinkFTMPrice = EACAggregatorProxy.bind(EACAggregatorProxyAddress);
 
-  let priceDeusFtm = deusFtm
+  let priceDeusFtm = deusFtmPair
     .getReserves()
     .value0.times(BI_EXP_18)
-    .div(deusFtm.getReserves().value1);
+    .div(deusFtmPair.getReserves().value1);
 
   let priceFtmUsdc = chainLinkFTMPrice.latestAnswer().times(BI_EXP_10); // EACAggregatorProxy has 8 decimals
   let priceDeusUsdc = priceDeusFtm.times(priceFtmUsdc).div(BI_EXP_18);
