@@ -57,7 +57,7 @@ function updateCumulativeTransactionCountRecord(
   cumulativeTransactionCountRecord.save();
 }
 
-function getNextId(): BigInt {
+function getNextPricePointId(): BigInt {
   let metaData = getMetaData();
   return metaData.nextPricePointId;
 }
@@ -69,10 +69,9 @@ function incrementNextId(): void {
 }
 
 export function snapshotPrice(event: ethereum.Event): void {
-  let newId = getNextId();
+  let newPricePointId = getNextPricePointId();
 
   let deusFtm = UniswapV2Pair.bind(Address.fromBytes(event.address));
-
   let chainLinkFTMPrice = EACAggregatorProxy.bind(EACAggregatorProxyAddress);
 
   let priceDeusFtm = deusFtm
@@ -86,7 +85,7 @@ export function snapshotPrice(event: ethereum.Event): void {
   let globalCount = incrementMetaDataGlobalTransactionCount();
   updateCumulativeTransactionCountRecord(event.block.timestamp, globalCount);
 
-  let pricePoint = new PricePoint(newId.toString());
+  let pricePoint = new PricePoint(newPricePointId.toString());
   pricePoint.timestamp = event.block.timestamp;
   pricePoint.priceDeusFtm = priceDeusFtm;
   pricePoint.priceFtmUsdc = priceFtmUsdc;
@@ -99,7 +98,7 @@ export function snapshotPrice(event: ethereum.Event): void {
     lastPointMetadata = new TwapLastPoint(TWAPDATA);
     lastPointMetadata.lastId = pricePoint.id;
 
-    let twapPoint = new TwapPoint(newId.toString());
+    let twapPoint = new TwapPoint(newPricePointId.toString());
     twapPoint.numerator = BigInt.fromI32(0);
     twapPoint.denominator = BigInt.fromI32(0);
     twapPoint.timestamp = pricePoint.timestamp;
@@ -117,7 +116,7 @@ export function snapshotPrice(event: ethereum.Event): void {
 
     let numerator = lastPoint!.priceDeusUsdc.times(deltaX);
     let denominator = deltaX;
-    let newTwap = new TwapPoint(newId.toString());
+    let newTwap = new TwapPoint(newPricePointId.toString());
     newTwap.numerator = lastTwap.numerator.plus(numerator);
     newTwap.denominator = lastTwap.denominator.plus(denominator);
     newTwap.timestamp = pricePoint.timestamp;
