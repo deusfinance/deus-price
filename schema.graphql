@@ -1,5 +1,6 @@
 type PricePoint @entity {
   id: ID!
+  blockNumber: BigInt!
   timestamp: BigInt!
 
   priceDeusFtm: BigInt!
@@ -17,6 +18,7 @@ type MetaData @entity {
 
 type CumulativeTransactionCount @entity {
   id: ID!
+  blockNumber: BigInt!
   timestamp: BigInt!
   count: BigInt!
 }
@@ -31,6 +33,7 @@ type TwapPoint @entity {
   id: ID!
   numerator: BigInt!
   denominator: BigInt!
+  blockNumber: BigInt!
   timestamp: BigInt!
   source: Bytes
 }

@@ -46,12 +46,14 @@ function incrementMetaDataGlobalTransactionCount(): BigInt {
 }
 
 function updateCumulativeTransactionCountRecord(
+  blockNumber: BigInt,
   timestamp: BigInt,
   globalCumulativeCount: BigInt
 ): void {
   let cumulativeTransactionCountRecord = getCumulativeTransactionCountRecord(
     timestamp
   );
+  cumulativeTransactionCountRecord.blockNumber = blockNumber;
   cumulativeTransactionCountRecord.timestamp = timestamp;
   cumulativeTransactionCountRecord.count = globalCumulativeCount;
   cumulativeTransactionCountRecord.save();
@@ -83,9 +85,14 @@ export function snapshotPrice(event: ethereum.Event): void {
   let priceDeusUsdc = priceDeusFtm.times(priceFtmUsdc).div(BI_EXP_18);
 
   let globalCount = incrementMetaDataGlobalTransactionCount();
-  updateCumulativeTransactionCountRecord(event.block.timestamp, globalCount);
+  updateCumulativeTransactionCountRecord(
+    event.block.blockNumber,
+    event.block.timestamp,
+    globalCount
+  );
 
   let pricePoint = new PricePoint(newPricePointId.toString());
+  pricePoint.blockNumber = event.block.blockNumber;
   pricePoint.timestamp = event.block.timestamp;
   pricePoint.priceDeusFtm = priceDeusFtm;
   pricePoint.priceFtmUsdc = priceFtmUsdc;
@@ -101,6 +108,7 @@ export function snapshotPrice(event: ethereum.Event): void {
     let twapPoint = new TwapPoint(newPricePointId.toString());
     twapPoint.numerator = BigInt.fromI32(0);
     twapPoint.denominator = BigInt.fromI32(0);
+    twapPoint.blockNumber = pricePoint.blockNumber;
     twapPoint.timestamp = pricePoint.timestamp;
     twapPoint.save();
 
@@ -119,6 +127,7 @@ export function snapshotPrice(event: ethereum.Event): void {
     let newTwap = new TwapPoint(newPricePointId.toString());
     newTwap.numerator = lastTwap.numerator.plus(numerator);
     newTwap.denominator = lastTwap.denominator.plus(denominator);
+    newTwap.blockNumber = pricePoint.blockNumber;
     newTwap.timestamp = pricePoint.timestamp;
     newTwap.source = event.address;
     newTwap.save();
