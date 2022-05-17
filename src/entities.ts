@@ -8,12 +8,19 @@ import {
   TwapLastPoint,
   TwapPoint,
 } from "../generated/schema";
+import {
+  BI_EXP_10,
+  BI_EXP_18,
+  EACAggregatorProxyAddress,
+  METADATA,
+  TWAPDATA,
+} from "./constants";
 
 function getMetaData(): MetaData {
-  let metaData = MetaData.load("metadata");
+  let metaData = MetaData.load(METADATA);
   if (metaData == null) {
-    metaData = new MetaData("metadata");
-    metaData.nextPricePointId = BigInt.fromI32(1000);
+    metaData = new MetaData(METADATA);
+    metaData.nextPricePointId = BigInt.fromI32(1);
     metaData.count = BigInt.fromI32(0);
     metaData.save();
   }
@@ -56,7 +63,7 @@ function getNextId(): BigInt {
 }
 
 function incrementNextId(): void {
-  let metaData = MetaData.load("metadata") as MetaData;
+  let metaData = getMetaData();
   metaData.nextPricePointId = metaData.nextPricePointId.plus(BigInt.fromI32(1));
   metaData.save();
 }
@@ -66,22 +73,15 @@ export function snapshotPrice(event: ethereum.Event): void {
 
   let deusFtm = UniswapV2Pair.bind(Address.fromBytes(event.address));
 
-  let chainLinkFTMPrice = EACAggregatorProxy.bind(
-    Address.fromString("0xf4766552D15AE4d256Ad41B6cf2933482B0680dc")
-  );
+  let chainLinkFTMPrice = EACAggregatorProxy.bind(EACAggregatorProxyAddress);
 
   let priceDeusFtm = deusFtm
     .getReserves()
-    .value0.times(BigInt.fromString("1000000000000000000"))
+    .value0.times(BI_EXP_18)
     .div(deusFtm.getReserves().value1);
 
-  let priceFtmUsdc = chainLinkFTMPrice
-    .latestAnswer()
-    .times(BigInt.fromString("10000000000"));
-
-  let priceDeusUsdc = priceDeusFtm
-    .times(priceFtmUsdc)
-    .div(BigInt.fromString("1000000000000000000"));
+  let priceFtmUsdc = chainLinkFTMPrice.latestAnswer().times(BI_EXP_10); // EACAggregatorProxy has 8 decimals
+  let priceDeusUsdc = priceDeusFtm.times(priceFtmUsdc).div(BI_EXP_18);
 
   let globalCount = incrementMetaDataGlobalTransactionCount();
   updateCumulativeTransactionCountRecord(event.block.timestamp, globalCount);
@@ -94,13 +94,12 @@ export function snapshotPrice(event: ethereum.Event): void {
   pricePoint.source = event.address;
   pricePoint.save();
 
-  let lastPointMetadata = TwapLastPoint.load("twapData");
+  let lastPointMetadata = TwapLastPoint.load(TWAPDATA);
   if (!lastPointMetadata) {
-    lastPointMetadata = new TwapLastPoint("twapData");
+    lastPointMetadata = new TwapLastPoint(TWAPDATA);
     lastPointMetadata.lastId = pricePoint.id;
 
     let twapPoint = new TwapPoint(newId.toString());
-
     twapPoint.numerator = BigInt.fromI32(0);
     twapPoint.denominator = BigInt.fromI32(0);
     twapPoint.timestamp = pricePoint.timestamp;
