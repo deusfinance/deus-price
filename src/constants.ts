@@ -9,3 +9,5 @@ export const TWAPDATA = "twapdata";
 
 export const BI_EXP_10 = BigInt.fromString("10000000000");
 export const BI_EXP_18 = BigInt.fromString("1000000000000000000");
+
+export const BI_ZERO = BigInt.fromI32(0);

@@ -11,6 +11,7 @@ import {
 import {
   BI_EXP_10,
   BI_EXP_18,
+  BI_ZERO,
   EACAggregatorProxyAddress,
   METADATA,
   TWAPDATA,
@@ -27,6 +28,13 @@ function getMetaData(): MetaData {
   return metaData;
 }
 
+function incrementMetaDataGlobalTransactionCount(): BigInt {
+  let metadata = getMetaData();
+  metadata.count = metadata.count.plus(BigInt.fromI32(1));
+  metadata.save();
+  return metadata.count;
+}
+
 function getCumulativeTransactionCountRecord(
   timestamp: BigInt
 ): CumulativeTransactionCount {
@@ -36,13 +44,6 @@ function getCumulativeTransactionCountRecord(
     record.save();
   }
   return record;
-}
-
-function incrementMetaDataGlobalTransactionCount(): BigInt {
-  let metadata = getMetaData();
-  metadata.count = metadata.count.plus(BigInt.fromI32(1));
-  metadata.save();
-  return metadata.count;
 }
 
 function updateCumulativeTransactionCountRecord(
@@ -71,19 +72,24 @@ function incrementNextId(): void {
 }
 
 export function snapshotPrice(event: ethereum.Event): void {
+  // Generate a new ID
   let newPricePointId = getNextPricePointId();
 
+  // Initiate contracts
   let deusFtmPair = UniswapV2Pair.bind(Address.fromBytes(event.address));
   let chainLinkFTMPrice = EACAggregatorProxy.bind(EACAggregatorProxyAddress);
 
+  // DEUS price expressed in FTM
   let priceDeusFtm = deusFtmPair
     .getReserves()
     .value0.times(BI_EXP_18)
     .div(deusFtmPair.getReserves().value1);
 
+  // DEUS price expressed in USDC via FTM
   let priceFtmUsdc = chainLinkFTMPrice.latestAnswer().times(BI_EXP_10); // EACAggregatorProxy has 8 decimals
   let priceDeusUsdc = priceDeusFtm.times(priceFtmUsdc).div(BI_EXP_18);
 
+  // Update metadata
   let globalCount = incrementMetaDataGlobalTransactionCount();
   updateCumulativeTransactionCountRecord(
     event.block.blockNumber,
@@ -91,6 +97,7 @@ export function snapshotPrice(event: ethereum.Event): void {
     globalCount
   );
 
+  // Create a PricePoint, a single txn can contain multiple PricePoints
   let pricePoint = new PricePoint(newPricePointId.toString());
   pricePoint.blockNumber = event.block.blockNumber;
   pricePoint.timestamp = event.block.timestamp;
@@ -102,16 +109,15 @@ export function snapshotPrice(event: ethereum.Event): void {
 
   let lastPointMetadata = TwapLastPoint.load(TWAPDATA);
   if (!lastPointMetadata) {
-    lastPointMetadata = new TwapLastPoint(TWAPDATA);
-    lastPointMetadata.lastId = pricePoint.id;
-
     let twapPoint = new TwapPoint(newPricePointId.toString());
-    twapPoint.numerator = BigInt.fromI32(0);
-    twapPoint.denominator = BigInt.fromI32(0);
+    twapPoint.numerator = BI_ZERO;
+    twapPoint.denominator = BI_ZERO;
     twapPoint.blockNumber = pricePoint.blockNumber;
     twapPoint.timestamp = pricePoint.timestamp;
     twapPoint.save();
 
+    lastPointMetadata = new TwapLastPoint(TWAPDATA);
+    lastPointMetadata.lastId = pricePoint.id;
     lastPointMetadata.lastTwapId = twapPoint.id;
     lastPointMetadata.save();
   } else {
@@ -131,6 +137,7 @@ export function snapshotPrice(event: ethereum.Event): void {
     newTwap.timestamp = pricePoint.timestamp;
     newTwap.source = event.address;
     newTwap.save();
+
     lastPointMetadata.lastId = pricePoint.id;
     lastPointMetadata.lastTwapId = newTwap.id;
     lastPointMetadata.save();
