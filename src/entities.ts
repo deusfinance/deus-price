@@ -26,6 +26,7 @@ function getCumulativeTransactionCountRecord(
   let record = CumulativeTransactionCount.load(timestamp.toString());
   if (record == null) {
     record = new CumulativeTransactionCount(timestamp.toString());
+    record.save();
   }
   return record;
 }
