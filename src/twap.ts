@@ -78,12 +78,12 @@ function updateTwap(
     let lastPoint = PricePoint.load(lastPointMetadata.lastId);
     let lastTwap = TwapPoint.load(lastPointMetadata.lastTwapId) as TwapPoint;
 
-    let deltaX = pricePoint.timestamp
+    let factor = pricePoint.timestamp
       .minus(lastPoint!.timestamp)
       .times(BigInt.fromString(pricePoint.id));
 
-    let numerator = lastPoint!.priceDeusUsdc.times(deltaX);
-    let denominator = deltaX;
+    let numerator = lastPoint!.priceDeusUsdc.times(factor);
+    let denominator = factor;
 
     let newTwap = createNewTwap(
       newId,
