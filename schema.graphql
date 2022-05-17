@@ -6,7 +6,7 @@ type PricePoint @entity {
   priceFtmUsdc: BigInt!
 
   priceDeusUsdc: BigInt!
-  source: Bytes
+  source: Bytes!
 }
 
 type MetaData @entity {
