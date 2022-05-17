@@ -21,7 +21,7 @@ type CumulativeTransactionCount @entity {
   count: BigInt!
 }
 
-type TawapLastPoint @entity {
+type TwapLastPoint @entity {
   id: ID!
   lastId: String!
   lastTwapId: String!
