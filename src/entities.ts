@@ -18,7 +18,7 @@ import {
 
 function getMetaData(): MetaData {
   let metaData = MetaData.load(METADATA);
-  if (metaData == null) {
+  if (!metaData) {
     metaData = new MetaData(METADATA);
     metaData.nextPricePointId = BigInt.fromI32(1);
     metaData.count = BigInt.fromI32(0);
@@ -31,7 +31,7 @@ function getCumulativeTransactionCountRecord(
   timestamp: BigInt
 ): CumulativeTransactionCount {
   let record = CumulativeTransactionCount.load(timestamp.toString());
-  if (record == null) {
+  if (!record) {
     record = new CumulativeTransactionCount(timestamp.toString());
     record.save();
   }
