@@ -7,7 +7,5 @@ export const EACAggregatorProxyAddress = Address.fromString(
 export const METADATA = "metadata";
 export const TWAPDATA = "twapdata";
 
-export const SCALE = BigInt.fromI32(18);
-
 export const BI_EXP_10 = BigInt.fromString("10000000000");
 export const BI_EXP_18 = BigInt.fromString("1000000000000000000");
