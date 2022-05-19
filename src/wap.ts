@@ -23,7 +23,7 @@ function getMetaData(): MetaData {
   let metaData = MetaData.load(METADATA);
   if (metaData == null) {
     metaData = new MetaData(METADATA);
-    metaData.nextPricePointId = BigInt.fromI32(1000);
+    metaData.nextPricePointId = BI_ZERO;
     metaData.count = BI_ZERO;
     metaData.save();
   }
@@ -150,10 +150,10 @@ function createNewWap(
 function updateWapMetadata(
   lastPointMetadata: WapLastPoint,
   pricePoint: PricePoint,
-  newVwap: WapPoint
+  newWap: WapPoint
 ): void {
   lastPointMetadata.lastId = pricePoint.id;
-  lastPointMetadata.lastWapId = newVwap.id;
+  lastPointMetadata.lastWapId = newWap.id;
   lastPointMetadata.save();
 }
 
@@ -177,8 +177,8 @@ function createInitialWapPoint(
 ): WapPoint {
   let wapPoint = new WapPoint(newId.toString());
 
-  wapPoint.numerator = BigInt.fromI32(0);
-  wapPoint.denominator = BigInt.fromI32(0);
+  wapPoint.numerator = BI_ZERO;
+  wapPoint.denominator = BI_ZERO;
   wapPoint.timestamp = pricePoint.timestamp;
   wapPoint.save();
   return wapPoint;

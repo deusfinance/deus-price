@@ -8,7 +8,7 @@ type PricePoint @entity {
   priceFtmUsdc: BigInt!
 
   priceDeusUsdc: BigInt!
-  source: Bytes
+  source: Bytes!
 }
 
 type MetaData @entity {
@@ -34,5 +34,5 @@ type WapPoint @entity {
   numerator: BigInt!
   denominator: BigInt!
   timestamp: BigInt!
-  source: Bytes
+  source: Bytes!
 }
