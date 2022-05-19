@@ -78,11 +78,9 @@ function updateTwap(
     let lastPoint = PricePoint.load(lastPointMetadata.lastId);
     let lastTwap = TwapPoint.load(lastPointMetadata.lastTwapId) as TwapPoint;
 
-    let factor = pricePoint.timestamp
-      .minus(lastPoint!.timestamp)
-      .times(BigInt.fromString(pricePoint.id));
+    let factor = pricePoint.reserveDeus.minus(lastPoint!.reserveDeus).abs();
 
-    let numerator = lastPoint!.priceDeusUsdc.times(factor);
+    let numerator = pricePoint.priceDeusUsdc.times(factor);
     let denominator = factor;
 
     let newTwap = createNewTwap(
@@ -105,10 +103,12 @@ function createNewPricePoint(event: ethereum.Event, newId: BigInt): PricePoint {
     Address.fromString("0xf4766552D15AE4d256Ad41B6cf2933482B0680dc")
   );
 
-  let priceDeusFtm = deusFtm
-    .getReserves()
-    .value0.times(BigInt.fromString("1000000000000000000"))
-    .div(deusFtm.getReserves().value1);
+  let reserveDeus = deusFtm.getReserves().value0;
+  let reserveFtm = deusFtm.getReserves().value1;
+
+  let priceDeusFtm = reserveDeus
+    .times(BigInt.fromString("1000000000000000000"))
+    .div(reserveFtm);
 
   let priceFtmUsdc = chainLinkFTMPrice
     .latestAnswer()
@@ -123,6 +123,7 @@ function createNewPricePoint(event: ethereum.Event, newId: BigInt): PricePoint {
 
   let pricePoint = new PricePoint(newId.toString());
   pricePoint.timestamp = event.block.timestamp;
+  pricePoint.reserveDeus = reserveDeus;
   pricePoint.priceDeusFtm = priceDeusFtm;
   pricePoint.priceFtmUsdc = priceFtmUsdc;
   pricePoint.priceDeusUsdc = priceDeusUsdc;

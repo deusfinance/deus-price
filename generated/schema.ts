@@ -17,6 +17,7 @@ export class PricePoint extends Entity {
     this.set("id", Value.fromString(id));
 
     this.set("timestamp", Value.fromBigInt(BigInt.zero()));
+    this.set("reserveDeus", Value.fromBigInt(BigInt.zero()));
     this.set("priceDeusFtm", Value.fromBigInt(BigInt.zero()));
     this.set("priceFtmUsdc", Value.fromBigInt(BigInt.zero()));
     this.set("priceDeusUsdc", Value.fromBigInt(BigInt.zero()));
@@ -54,6 +55,15 @@ export class PricePoint extends Entity {
 
   set timestamp(value: BigInt) {
     this.set("timestamp", Value.fromBigInt(value));
+  }
+
+  get reserveDeus(): BigInt {
+    let value = this.get("reserveDeus");
+    return value!.toBigInt();
+  }
+
+  set reserveDeus(value: BigInt) {
+    this.set("reserveDeus", Value.fromBigInt(value));
   }
 
   get priceDeusFtm(): BigInt {

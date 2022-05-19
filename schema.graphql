@@ -2,6 +2,8 @@ type PricePoint @entity {
   id: ID!
   timestamp: BigInt!
 
+  reserveDeus: BigInt!
+
   priceDeusFtm: BigInt!
   priceFtmUsdc: BigInt!
 
