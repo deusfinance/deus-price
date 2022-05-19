@@ -23,13 +23,13 @@ type CumulativeTransactionCount @entity {
   count: BigInt!
 }
 
-type TawapLastPoint @entity {
+type WapLastPoint @entity {
   id: ID!
   lastId: String!
-  lastTwapId: String!
+  lastWapId: String!
 }
 
-type TwapPoint @entity {
+type WapPoint @entity {
   id: ID!
   numerator: BigInt!
   denominator: BigInt!

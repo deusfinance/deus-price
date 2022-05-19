@@ -222,29 +222,29 @@ export class CumulativeTransactionCount extends Entity {
   }
 }
 
-export class TawapLastPoint extends Entity {
+export class WapLastPoint extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
 
     this.set("lastId", Value.fromString(""));
-    this.set("lastTwapId", Value.fromString(""));
+    this.set("lastWapId", Value.fromString(""));
   }
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save TawapLastPoint entity without an ID");
+    assert(id != null, "Cannot save WapLastPoint entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.STRING,
-        `Entities of type TawapLastPoint must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type WapLastPoint must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("TawapLastPoint", id.toString(), this);
+      store.set("WapLastPoint", id.toString(), this);
     }
   }
 
-  static load(id: string): TawapLastPoint | null {
-    return changetype<TawapLastPoint | null>(store.get("TawapLastPoint", id));
+  static load(id: string): WapLastPoint | null {
+    return changetype<WapLastPoint | null>(store.get("WapLastPoint", id));
   }
 
   get id(): string {
@@ -265,17 +265,17 @@ export class TawapLastPoint extends Entity {
     this.set("lastId", Value.fromString(value));
   }
 
-  get lastTwapId(): string {
-    let value = this.get("lastTwapId");
+  get lastWapId(): string {
+    let value = this.get("lastWapId");
     return value!.toString();
   }
 
-  set lastTwapId(value: string) {
-    this.set("lastTwapId", Value.fromString(value));
+  set lastWapId(value: string) {
+    this.set("lastWapId", Value.fromString(value));
   }
 }
 
-export class TwapPoint extends Entity {
+export class WapPoint extends Entity {
   constructor(id: string) {
     super();
     this.set("id", Value.fromString(id));
@@ -287,18 +287,18 @@ export class TwapPoint extends Entity {
 
   save(): void {
     let id = this.get("id");
-    assert(id != null, "Cannot save TwapPoint entity without an ID");
+    assert(id != null, "Cannot save WapPoint entity without an ID");
     if (id) {
       assert(
         id.kind == ValueKind.STRING,
-        `Entities of type TwapPoint must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
+        `Entities of type WapPoint must have an ID of type String but the id '${id.displayData()}' is of type ${id.displayKind()}`
       );
-      store.set("TwapPoint", id.toString(), this);
+      store.set("WapPoint", id.toString(), this);
     }
   }
 
-  static load(id: string): TwapPoint | null {
-    return changetype<TwapPoint | null>(store.get("TwapPoint", id));
+  static load(id: string): WapPoint | null {
+    return changetype<WapPoint | null>(store.get("WapPoint", id));
   }
 
   get id(): string {

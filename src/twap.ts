@@ -5,8 +5,8 @@ import {
   PricePoint,
   MetaData,
   CumulativeTransactionCount,
-  TawapLastPoint,
-  TwapPoint,
+  WapLastPoint,
+  WapPoint,
 } from "../generated/schema";
 function getMetaData(): MetaData {
   let metaData = MetaData.load("metadata");
@@ -62,37 +62,35 @@ function incrementNextId(): void {
 function snapshotPrice(event: ethereum.Event): void {
   let newId = getNextId();
   let pricePoint = createNewPricePoint(event, newId);
-  updateTwap(pricePoint, newId, event);
+  updateWap(pricePoint, newId, event);
   incrementNextId();
 }
 
-function updateTwap(
+function updateWap(
   pricePoint: PricePoint,
   newId: BigInt,
   event: ethereum.Event
 ): void {
-  let lastPointMetadata = TawapLastPoint.load("twapData");
+  let lastPointMetadata = WapLastPoint.load("VwapData");
   if (!lastPointMetadata) {
-    lastPointMetadata = createInitialTwapMetadata(pricePoint, newId);
+    lastPointMetadata = createInitialVwapMetadata(pricePoint, newId);
   } else {
     let lastPoint = PricePoint.load(lastPointMetadata.lastId);
-    let lastTwap = TwapPoint.load(lastPointMetadata.lastTwapId) as TwapPoint;
-
+    let lastVwap = WapPoint.load(lastPointMetadata.lastWapId) as WapPoint;
     let factor = pricePoint.reserveDeus.minus(lastPoint!.reserveDeus).abs();
-
     let numerator = pricePoint.priceDeusUsdc.times(factor);
     let denominator = factor;
 
-    let newTwap = createNewTwap(
+    let newVwap = createNewVwap(
       newId,
-      lastTwap,
+      lastVwap,
       numerator,
       denominator,
       pricePoint,
       event.address
     );
 
-    updateTwapMetadata(lastPointMetadata, pricePoint, newTwap);
+    updateWapMetadata(lastPointMetadata, pricePoint, newVwap);
   }
 }
 
@@ -132,58 +130,58 @@ function createNewPricePoint(event: ethereum.Event, newId: BigInt): PricePoint {
   return pricePoint;
 }
 
-function createNewTwap(
+function createNewVwap(
   newId: BigInt,
-  lastTwap: TwapPoint,
+  lastVwap: WapPoint,
   numerator: BigInt,
   denominator: BigInt,
   pricePoint: PricePoint,
   source: Address
-): TwapPoint {
-  let newTwap = new TwapPoint(newId.toString());
-  newTwap.numerator = lastTwap.numerator.plus(numerator);
-  newTwap.denominator = lastTwap.denominator.plus(denominator);
-  newTwap.timestamp = pricePoint.timestamp;
-  newTwap.source = source;
-  newTwap.save();
-  return newTwap;
+): WapPoint {
+  let newVwap = new WapPoint(newId.toString());
+  newVwap.numerator = lastVwap.numerator.plus(numerator);
+  newVwap.denominator = lastVwap.denominator.plus(denominator);
+  newVwap.timestamp = pricePoint.timestamp;
+  newVwap.source = source;
+  newVwap.save();
+  return newVwap;
 }
 
-function updateTwapMetadata(
-  lastPointMetadata: TawapLastPoint,
+function updateWapMetadata(
+  lastPointMetadata: WapLastPoint,
   pricePoint: PricePoint,
-  newTwap: TwapPoint
+  newVwap: WapPoint
 ): void {
   lastPointMetadata.lastId = pricePoint.id;
-  lastPointMetadata.lastTwapId = newTwap.id;
+  lastPointMetadata.lastWapId = newVwap.id;
   lastPointMetadata.save();
 }
 
-function createInitialTwapMetadata(
+function createInitialVwapMetadata(
   pricePoint: PricePoint,
   newId: BigInt
-): TawapLastPoint {
-  let lastPointMetadata = new TawapLastPoint("twapData");
-  let twapPoint = createInitialTwapPoint(newId, pricePoint);
+): WapLastPoint {
+  let lastPointMetadata = new WapLastPoint("VwapData");
+  let WapPoint = createInitialWapPoint(newId, pricePoint);
 
   lastPointMetadata.lastId = pricePoint.id;
 
-  lastPointMetadata.lastTwapId = twapPoint.id;
+  lastPointMetadata.lastWapId = WapPoint.id;
   lastPointMetadata.save();
   return lastPointMetadata;
 }
 
-function createInitialTwapPoint(
+function createInitialWapPoint(
   newId: BigInt,
   pricePoint: PricePoint
-): TwapPoint {
-  let twapPoint = new TwapPoint(newId.toString());
+): WapPoint {
+  let wapPoint = new WapPoint(newId.toString());
 
-  twapPoint.numerator = BigInt.fromI32(0);
-  twapPoint.denominator = BigInt.fromI32(0);
-  twapPoint.timestamp = pricePoint.timestamp;
-  twapPoint.save();
-  return twapPoint;
+  wapPoint.numerator = BigInt.fromI32(0);
+  wapPoint.denominator = BigInt.fromI32(0);
+  wapPoint.timestamp = pricePoint.timestamp;
+  wapPoint.save();
+  return wapPoint;
 }
 
 export { snapshotPrice };
