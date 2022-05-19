@@ -8,12 +8,23 @@ import {
   WapLastPoint,
   WapPoint,
 } from "../generated/schema";
+
+import {
+  BI_EXP_10,
+  BI_EXP_18,
+  BI_ONE,
+  BI_ZERO,
+  EACAggregatorProxyAddress,
+  METADATA,
+  WAPDATA,
+} from "./constants";
+
 function getMetaData(): MetaData {
-  let metaData = MetaData.load("metadata");
+  let metaData = MetaData.load(METADATA);
   if (metaData == null) {
-    metaData = new MetaData("metadata");
+    metaData = new MetaData(METADATA);
     metaData.nextPricePointId = BigInt.fromI32(1000);
-    metaData.count = BigInt.fromI32(0);
+    metaData.count = BI_ZERO;
     metaData.save();
   }
   return metaData;
@@ -31,7 +42,7 @@ function getCumulativeTransactionCountRecord(
 
 function incrementMetaDataGlobalTransactionCount(): BigInt {
   let metadata = getMetaData();
-  metadata.count = metadata.count.plus(BigInt.fromI32(1));
+  metadata.count = metadata.count.plus(BI_ONE);
   metadata.save();
   return metadata.count;
 }
@@ -54,8 +65,8 @@ function getNextId(): BigInt {
 }
 
 function incrementNextId(): void {
-  let metaData = MetaData.load("metadata") as MetaData;
-  metaData.nextPricePointId = metaData.nextPricePointId.plus(BigInt.fromI32(1));
+  let metaData = MetaData.load(METADATA) as MetaData;
+  metaData.nextPricePointId = metaData.nextPricePointId.plus(BI_ONE);
   metaData.save();
 }
 
@@ -71,19 +82,19 @@ function updateWap(
   newId: BigInt,
   event: ethereum.Event
 ): void {
-  let lastPointMetadata = WapLastPoint.load("VwapData");
+  let lastPointMetadata = WapLastPoint.load(WAPDATA);
   if (!lastPointMetadata) {
-    lastPointMetadata = createInitialVwapMetadata(pricePoint, newId);
+    createInitialWapMetadata(pricePoint, newId);
   } else {
     let lastPoint = PricePoint.load(lastPointMetadata.lastId);
-    let lastVwap = WapPoint.load(lastPointMetadata.lastWapId) as WapPoint;
+    let lastWap = WapPoint.load(lastPointMetadata.lastWapId) as WapPoint;
     let factor = pricePoint.reserveDeus.minus(lastPoint!.reserveDeus).abs();
     let numerator = pricePoint.priceDeusUsdc.times(factor);
     let denominator = factor;
 
-    let newVwap = createNewVwap(
+    let newVwap = createNewWap(
       newId,
-      lastVwap,
+      lastWap,
       numerator,
       denominator,
       pricePoint,
@@ -96,25 +107,14 @@ function updateWap(
 
 function createNewPricePoint(event: ethereum.Event, newId: BigInt): PricePoint {
   let deusFtm = UniswapV2Pair.bind(Address.fromBytes(event.address));
-
-  let chainLinkFTMPrice = EACAggregatorProxy.bind(
-    Address.fromString("0xf4766552D15AE4d256Ad41B6cf2933482B0680dc")
-  );
+  let chainLinkFTMPrice = EACAggregatorProxy.bind(EACAggregatorProxyAddress);
 
   let reserveDeus = deusFtm.getReserves().value0;
   let reserveFtm = deusFtm.getReserves().value1;
 
-  let priceDeusFtm = reserveDeus
-    .times(BigInt.fromString("1000000000000000000"))
-    .div(reserveFtm);
-
-  let priceFtmUsdc = chainLinkFTMPrice
-    .latestAnswer()
-    .times(BigInt.fromString("10000000000"));
-
-  let priceDeusUsdc = priceDeusFtm
-    .times(priceFtmUsdc)
-    .div(BigInt.fromString("1000000000000000000"));
+  let priceDeusFtm = reserveDeus.times(BI_EXP_18).div(reserveFtm);
+  let priceFtmUsdc = chainLinkFTMPrice.latestAnswer().times(BI_EXP_10);
+  let priceDeusUsdc = priceDeusFtm.times(priceFtmUsdc).div(BI_EXP_18);
 
   let globalCount = incrementMetaDataGlobalTransactionCount();
   updateCumulativeTransactionCountRecord(event.block.timestamp, globalCount);
@@ -130,21 +130,21 @@ function createNewPricePoint(event: ethereum.Event, newId: BigInt): PricePoint {
   return pricePoint;
 }
 
-function createNewVwap(
+function createNewWap(
   newId: BigInt,
-  lastVwap: WapPoint,
+  lastWap: WapPoint,
   numerator: BigInt,
   denominator: BigInt,
   pricePoint: PricePoint,
   source: Address
 ): WapPoint {
-  let newVwap = new WapPoint(newId.toString());
-  newVwap.numerator = lastVwap.numerator.plus(numerator);
-  newVwap.denominator = lastVwap.denominator.plus(denominator);
-  newVwap.timestamp = pricePoint.timestamp;
-  newVwap.source = source;
-  newVwap.save();
-  return newVwap;
+  let newWap = new WapPoint(newId.toString());
+  newWap.numerator = lastWap.numerator.plus(numerator);
+  newWap.denominator = lastWap.denominator.plus(denominator);
+  newWap.timestamp = pricePoint.timestamp;
+  newWap.source = source;
+  newWap.save();
+  return newWap;
 }
 
 function updateWapMetadata(
@@ -157,11 +157,11 @@ function updateWapMetadata(
   lastPointMetadata.save();
 }
 
-function createInitialVwapMetadata(
+function createInitialWapMetadata(
   pricePoint: PricePoint,
   newId: BigInt
 ): WapLastPoint {
-  let lastPointMetadata = new WapLastPoint("VwapData");
+  let lastPointMetadata = new WapLastPoint(WAPDATA);
   let WapPoint = createInitialWapPoint(newId, pricePoint);
 
   lastPointMetadata.lastId = pricePoint.id;

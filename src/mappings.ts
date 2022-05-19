@@ -1,6 +1,6 @@
 import { Burn, Mint, Swap } from "../generated/DeusFtm/UniswapV2Pair";
 
-import { snapshotPrice } from "./twap";
+import { snapshotPrice } from "./wap";
 
 export function handleBurn(event: Burn): void {
   snapshotPrice(event);
