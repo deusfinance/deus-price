@@ -92,7 +92,7 @@ function updateWap(
     let numerator = lastPoint!.priceDeusUsdc.times(factor);
     let denominator = factor;
 
-    let newVwap = createNewWap(
+    let newWap = createNewWap(
       newId,
       lastWap,
       numerator,
@@ -101,7 +101,7 @@ function updateWap(
       event.address
     );
 
-    updateWapMetadata(lastPointMetadata, pricePoint, newVwap);
+    updateWapMetadata(lastPointMetadata, pricePoint, newWap);
   }
 }
 
