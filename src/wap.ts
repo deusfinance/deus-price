@@ -5,15 +5,26 @@ import {
   PricePoint,
   MetaData,
   CumulativeTransactionCount,
-  TawapLastPoint,
-  TwapPoint,
+  WapLastPoint,
+  WapPoint,
 } from "../generated/schema";
+
+import {
+  BI_EXP_10,
+  BI_EXP_18,
+  BI_ONE,
+  BI_ZERO,
+  EACAggregatorProxyAddress,
+  METADATA,
+  WAPDATA,
+} from "./constants";
+
 function getMetaData(): MetaData {
-  let metaData = MetaData.load("metadata");
+  let metaData = MetaData.load(METADATA);
   if (metaData == null) {
-    metaData = new MetaData("metadata");
-    metaData.nextPricePointId = BigInt.fromI32(1000);
-    metaData.count = BigInt.fromI32(0);
+    metaData = new MetaData(METADATA);
+    metaData.nextPricePointId = BI_ZERO;
+    metaData.count = BI_ZERO;
     metaData.save();
   }
   return metaData;
@@ -31,7 +42,7 @@ function getCumulativeTransactionCountRecord(
 
 function incrementMetaDataGlobalTransactionCount(): BigInt {
   let metadata = getMetaData();
-  metadata.count = metadata.count.plus(BigInt.fromI32(1));
+  metadata.count = metadata.count.plus(BI_ONE);
   metadata.save();
   return metadata.count;
 }
@@ -54,73 +65,63 @@ function getNextId(): BigInt {
 }
 
 function incrementNextId(): void {
-  let metaData = MetaData.load("metadata") as MetaData;
-  metaData.nextPricePointId = metaData.nextPricePointId.plus(BigInt.fromI32(1));
+  let metaData = MetaData.load(METADATA) as MetaData;
+  metaData.nextPricePointId = metaData.nextPricePointId.plus(BI_ONE);
   metaData.save();
 }
 
 function snapshotPrice(event: ethereum.Event): void {
   let newId = getNextId();
   let pricePoint = createNewPricePoint(event, newId);
-  updateTwap(pricePoint, newId, event);
+  updateWap(pricePoint, newId, event);
   incrementNextId();
 }
 
-function updateTwap(
+function updateWap(
   pricePoint: PricePoint,
   newId: BigInt,
   event: ethereum.Event
 ): void {
-  let lastPointMetadata = TawapLastPoint.load("twapData");
+  let lastPointMetadata = WapLastPoint.load(WAPDATA);
   if (!lastPointMetadata) {
-    lastPointMetadata = createInitialTwapMetadata(pricePoint, newId);
+    createInitialWapMetadata(pricePoint, newId);
   } else {
     let lastPoint = PricePoint.load(lastPointMetadata.lastId);
-    let lastTwap = TwapPoint.load(lastPointMetadata.lastTwapId) as TwapPoint;
-
-    let factor = pricePoint.timestamp.minus(lastPoint!.timestamp);
-
+    let lastWap = WapPoint.load(lastPointMetadata.lastWapId) as WapPoint;
+    let factor = pricePoint.timestamp.minus(lastPoint!.timestamp).abs();
     let numerator = lastPoint!.priceDeusUsdc.times(factor);
     let denominator = factor;
 
-    let newTwap = createNewTwap(
+    let newVwap = createNewWap(
       newId,
-      lastTwap,
+      lastWap,
       numerator,
       denominator,
       pricePoint,
       event.address
     );
 
-    updateTwapMetadata(lastPointMetadata, pricePoint, newTwap);
+    updateWapMetadata(lastPointMetadata, pricePoint, newVwap);
   }
 }
 
 function createNewPricePoint(event: ethereum.Event, newId: BigInt): PricePoint {
   let deusFtm = UniswapV2Pair.bind(Address.fromBytes(event.address));
+  let chainLinkFTMPrice = EACAggregatorProxy.bind(EACAggregatorProxyAddress);
 
-  let chainLinkFTMPrice = EACAggregatorProxy.bind(
-    Address.fromString("0xf4766552D15AE4d256Ad41B6cf2933482B0680dc")
-  );
+  let reserveDeus = deusFtm.getReserves().value0;
+  let reserveFtm = deusFtm.getReserves().value1;
 
-  let priceDeusFtm = deusFtm
-    .getReserves()
-    .value0.times(BigInt.fromString("1000000000000000000"))
-    .div(deusFtm.getReserves().value1);
-
-  let priceFtmUsdc = chainLinkFTMPrice
-    .latestAnswer()
-    .times(BigInt.fromString("10000000000"));
-
-  let priceDeusUsdc = priceDeusFtm
-    .times(priceFtmUsdc)
-    .div(BigInt.fromString("1000000000000000000"));
+  let priceDeusFtm = reserveDeus.times(BI_EXP_18).div(reserveFtm);
+  let priceFtmUsdc = chainLinkFTMPrice.latestAnswer().times(BI_EXP_10);
+  let priceDeusUsdc = priceDeusFtm.times(priceFtmUsdc).div(BI_EXP_18);
 
   let globalCount = incrementMetaDataGlobalTransactionCount();
   updateCumulativeTransactionCountRecord(event.block.timestamp, globalCount);
 
   let pricePoint = new PricePoint(newId.toString());
   pricePoint.timestamp = event.block.timestamp;
+  pricePoint.reserveDeus = reserveDeus;
   pricePoint.priceDeusFtm = priceDeusFtm;
   pricePoint.priceFtmUsdc = priceFtmUsdc;
   pricePoint.priceDeusUsdc = priceDeusUsdc;
@@ -129,58 +130,58 @@ function createNewPricePoint(event: ethereum.Event, newId: BigInt): PricePoint {
   return pricePoint;
 }
 
-function createNewTwap(
+function createNewWap(
   newId: BigInt,
-  lastTwap: TwapPoint,
+  lastWap: WapPoint,
   numerator: BigInt,
   denominator: BigInt,
   pricePoint: PricePoint,
   source: Address
-): TwapPoint {
-  let newTwap = new TwapPoint(newId.toString());
-  newTwap.numerator = lastTwap.numerator.plus(numerator);
-  newTwap.denominator = lastTwap.denominator.plus(denominator);
-  newTwap.timestamp = pricePoint.timestamp;
-  newTwap.source = source;
-  newTwap.save();
-  return newTwap;
+): WapPoint {
+  let newWap = new WapPoint(newId.toString());
+  newWap.numerator = lastWap.numerator.plus(numerator);
+  newWap.denominator = lastWap.denominator.plus(denominator);
+  newWap.timestamp = pricePoint.timestamp;
+  newWap.source = source;
+  newWap.save();
+  return newWap;
 }
 
-function updateTwapMetadata(
-  lastPointMetadata: TawapLastPoint,
+function updateWapMetadata(
+  lastPointMetadata: WapLastPoint,
   pricePoint: PricePoint,
-  newTwap: TwapPoint
+  newWap: WapPoint
 ): void {
   lastPointMetadata.lastId = pricePoint.id;
-  lastPointMetadata.lastTwapId = newTwap.id;
+  lastPointMetadata.lastWapId = newWap.id;
   lastPointMetadata.save();
 }
 
-function createInitialTwapMetadata(
+function createInitialWapMetadata(
   pricePoint: PricePoint,
   newId: BigInt
-): TawapLastPoint {
-  let lastPointMetadata = new TawapLastPoint("twapData");
-  let twapPoint = createInitialTwapPoint(newId, pricePoint);
+): WapLastPoint {
+  let lastPointMetadata = new WapLastPoint(WAPDATA);
+  let WapPoint = createInitialWapPoint(newId, pricePoint);
 
   lastPointMetadata.lastId = pricePoint.id;
 
-  lastPointMetadata.lastTwapId = twapPoint.id;
+  lastPointMetadata.lastWapId = WapPoint.id;
   lastPointMetadata.save();
   return lastPointMetadata;
 }
 
-function createInitialTwapPoint(
+function createInitialWapPoint(
   newId: BigInt,
   pricePoint: PricePoint
-): TwapPoint {
-  let twapPoint = new TwapPoint(newId.toString());
+): WapPoint {
+  let wapPoint = new WapPoint(newId.toString());
 
-  twapPoint.numerator = BigInt.fromI32(0);
-  twapPoint.denominator = BigInt.fromI32(0);
-  twapPoint.timestamp = pricePoint.timestamp;
-  twapPoint.save();
-  return twapPoint;
+  wapPoint.numerator = BI_ZERO;
+  wapPoint.denominator = BI_ZERO;
+  wapPoint.timestamp = pricePoint.timestamp;
+  wapPoint.save();
+  return wapPoint;
 }
 
 export { snapshotPrice };

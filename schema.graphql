@@ -2,11 +2,13 @@ type PricePoint @entity {
   id: ID!
   timestamp: BigInt!
 
+  reserveDeus: BigInt!
+
   priceDeusFtm: BigInt!
   priceFtmUsdc: BigInt!
 
   priceDeusUsdc: BigInt!
-  source: Bytes
+  source: Bytes!
 }
 
 type MetaData @entity {
@@ -21,16 +23,16 @@ type CumulativeTransactionCount @entity {
   count: BigInt!
 }
 
-type TawapLastPoint @entity {
+type WapLastPoint @entity {
   id: ID!
   lastId: String!
-  lastTwapId: String!
+  lastWapId: String!
 }
 
-type TwapPoint @entity {
+type WapPoint @entity {
   id: ID!
   numerator: BigInt!
   denominator: BigInt!
   timestamp: BigInt!
-  source: Bytes
+  source: Bytes!
 }
